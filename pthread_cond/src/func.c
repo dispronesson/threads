@@ -41,7 +41,7 @@ void* producer(void* arg) {
             abort();
         }
         uint16_t added = tqueue->added;
-        slots--;
+        atomic_fetch_sub(&slots, 1);
         items++;
 
         pthread_cond_signal(&cond_c);
@@ -80,7 +80,7 @@ void* consumer(void* arg) {
         Message* msg = dequeue(tqueue);
         u_int16_t extracted = tqueue->extracted;
         items--;
-        slots++;
+        atomic_fetch_add(&slots, 1);
 
         pthread_cond_signal(&cond_p);
         pthread_mutex_unlock(&mutex);

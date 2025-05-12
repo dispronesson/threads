@@ -7,7 +7,7 @@ int main() {
         abort();
     }
 
-    sem_init(&slots, 0, queue_capacity);
+    sem_init(&slots, 0, START_QUEUE_CAPACITY);
     sem_init(&items, 0, 0);
 
     interface();
