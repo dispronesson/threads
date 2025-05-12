@@ -191,18 +191,12 @@ Message* msg_create(uint32_t* seedp) {
     msg->hash = 0;
     msg->type = (uint8_t)(rand_r(seedp) % 256);
 
-    while (1) {
+    do {
         size = (uint16_t)(rand_r(seedp) % 257);
+    } while (size == 0);
 
-        if (size == 0) continue;
-
-        if (size == 256) msg->size = 0;
-        else msg->size = (uint8_t)size;
-
-        break;
-    }
-
-    msg->data = malloc(((msg->size + 3) / 4) * 4);
+    msg->size = size == 256 ? 0 : size;
+    msg->data = malloc(((size + 3) / 4) * 4);
     if (!msg->data) {
         free(msg);
         return NULL;

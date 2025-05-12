@@ -63,5 +63,6 @@ void inc_queue();
 void dec_queue();
 void terminate_main_thread();
 void interface();
+void pthread_mutex_unlock_void(void* mutex);
 
 #endif //FUNC_H

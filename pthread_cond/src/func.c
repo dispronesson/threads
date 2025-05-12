@@ -28,6 +28,8 @@ void* producer(void* arg) {
 
         pthread_mutex_lock(&mutex);
 
+        pthread_cleanup_push(pthread_mutex_unlock_void, &mutex);
+
         while (slots <= 0) {
             pthread_cond_wait(&cond_p, &mutex);
         }
@@ -55,6 +57,7 @@ void* producer(void* arg) {
         pthread_mutex_unlock(&print_mutex);
 
         pthread_cleanup_pop(0);
+        pthread_cleanup_pop(0);
 
         sleep(3);
     }
@@ -67,6 +70,8 @@ void* consumer(void* arg) {
 
     while (1) {
         pthread_mutex_lock(&mutex);
+
+        pthread_cleanup_push(pthread_mutex_unlock_void, &mutex);
 
         while (items <= 0) {
             pthread_cond_wait(&cond_c, &mutex);
@@ -96,6 +101,8 @@ void* consumer(void* arg) {
         pthread_mutex_unlock(&print_mutex);
 
         msg_destroy(msg);
+
+        pthread_cleanup_pop(0);
 
         sleep(3);
     }
@@ -202,18 +209,12 @@ Message* msg_create(uint32_t* seedp) {
     msg->hash = 0;
     msg->type = (uint8_t)(rand_r(seedp) % 256);
 
-    while (1) {
+    do {
         size = (uint16_t)(rand_r(seedp) % 257);
+    } while (size == 0);
 
-        if (size == 0) continue;
-
-        if (size == 256) msg->size = 0;
-        else msg->size = (uint8_t)size;
-
-        break;
-    }
-
-    msg->data = malloc(((msg->size + 3) / 4) * 4);
+    msg->size = size == 256 ? 0 : size;
+    msg->data = malloc(((size + 3) / 4) * 4);
     if (!msg->data) {
         free(msg);
         return NULL;
@@ -380,4 +381,8 @@ void interface() {
                 break;
         }
     }
+}
+
+void pthread_mutex_unlock_void(void* mutex) {
+    pthread_mutex_unlock((pthread_mutex_t*)mutex);
 }
