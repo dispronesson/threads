@@ -43,7 +43,7 @@ typedef struct Queue {
 extern Queue* tqueue;
 extern sem_t slots;
 extern sem_t items;
-extern uint16_t queue_capacity;
+extern uint8_t queue_capacity;
 
 void* producer(void* arg);
 void* consumer(void * arg);
