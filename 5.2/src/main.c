@@ -1,15 +1,8 @@
 #include "func.h"
 
 int main() {
-    tqueue = queue_create();
-    if (!tqueue) {
-        err_handle("malloc", ENOMEM);
-        abort();
-    }
-
+    start_init();
     interface();
-
-    queue_destroy(tqueue);
-
+    int_handle(SIGINT);
     return 0;
 }

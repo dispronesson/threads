@@ -9,6 +9,7 @@ pthread_t tids_c[MAX_CONSUMER_COUNT];
 uint8_t producers;
 uint8_t consumers;
 uint8_t queue_capacity = START_QUEUE_CAPACITY;
+struct termios oldt;
 
 void* producer(void* arg) {
     uint8_t id = (uint8_t)(uintptr_t)arg;
@@ -230,19 +231,28 @@ void err_handle(char* msg, int en) {
     fprintf(stderr, "%s: %s\n", msg, strerror(en));
 }
 
-char getch() {
-    struct termios oldt, newt;
-    char ch;
+void start_init() {
+    tqueue = queue_create();
+    if (!tqueue) {
+        err_handle("malloc", ENOMEM);
+        abort();
+    }
 
+    sem_init(&slots, 0, START_QUEUE_CAPACITY);
+    sem_init(&items, 0, 0);
+    
+    struct sigaction sa;
+    sa.sa_flags = 0;
+    sa.sa_handler = int_handle;
+    sigemptyset(&sa.sa_mask);
+    sigaction(SIGINT, &sa, NULL);
+
+    struct termios newt;
+    char ch;
     tcgetattr(STDIN_FILENO, &oldt);
     newt = oldt;
     newt.c_lflag &= ~(ICANON | ECHO);
-
     tcsetattr(STDIN_FILENO, TCSANOW, &newt);
-    ch = getchar();
-    tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
-    
-    return ch;
 }
 
 void producer_create() {
@@ -341,7 +351,7 @@ void interface() {
     char ch;
 
     while (1) {
-        ch = getch();
+        ch = getchar();
         switch (ch) {
             case 'p': 
                 producer_create();
@@ -362,7 +372,6 @@ void interface() {
                 dec_queue();
                 break;
             case 'q':
-                terminate_main_thread();
                 printf("Exiting...\n");
                 return;
             default:
@@ -370,4 +379,13 @@ void interface() {
                 break;
         }
     }
+}
+
+void int_handle(int signo) {
+    terminate_main_thread();
+    sem_destroy(&items);
+    sem_destroy(&slots);
+    queue_destroy(tqueue);
+    tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
+    exit(EXIT_SUCCESS);
 }

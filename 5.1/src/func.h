@@ -56,7 +56,7 @@ Message* msg_create(uint32_t* seedp);
 int msg_destroy(Message* msg);
 void msg_destroy_void(void* msg);
 void err_handle(char* msg, int en);
-char getch();
+void start_init();
 void producer_create();
 void producer_delete();
 void consumer_create();
@@ -65,5 +65,6 @@ void inc_queue();
 void dec_queue();
 void terminate_main_thread();
 void interface();
+void int_handle(int signo);
 
 #endif //FUNC_H
