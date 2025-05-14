@@ -11,8 +11,10 @@ uint8_t queue_capacity = START_QUEUE_CAPACITY;
 _Atomic int8_t slots = START_QUEUE_CAPACITY;
 uint8_t items;
 struct termios oldt;
+sigset_t sigmask;
 
 void* producer(void* arg) {
+    pthread_sigmask(SIG_BLOCK, &sigmask, NULL);
     uint8_t id = (uint8_t)(uintptr_t)arg;
     struct timespec ts;
     clock_gettime(CLOCK_MONOTONIC, &ts);
@@ -67,6 +69,7 @@ void* producer(void* arg) {
 }
 
 void* consumer(void* arg) {
+    pthread_sigmask(SIG_BLOCK, &sigmask, NULL);
     uint8_t id = (uint8_t)(uintptr_t)arg;
 
     while (1) {
@@ -261,6 +264,9 @@ void start_init() {
     sa.sa_handler = int_handle;
     sigemptyset(&sa.sa_mask);
     sigaction(SIGINT, &sa, NULL);
+
+    sigemptyset(&sigmask);
+    sigaddset(&sigmask, SIGINT);
 
     struct termios newt;
     char ch;

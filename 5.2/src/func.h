@@ -41,8 +41,6 @@ typedef struct Queue {
     uint16_t extracted;
 } Queue;
 
-extern Queue* tqueue;
-
 void* producer(void* arg);
 void* consumer(void * arg);
 Queue* queue_create();
